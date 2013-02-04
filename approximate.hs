@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Monad
-import Control.Applicative
 import qualified Control.Monad.Random as MR
 import Data.Aeson
 import Data.Aeson.Types
@@ -10,6 +9,7 @@ import qualified Data.ByteString.Lazy as DB
 import Data.Char
 
 frequencyMap [] ngmap = ngmap
+frequencyMap ((_, 0.0):ngs) ngmap = frequencyMap ngs ngmap
 frequencyMap ((ng, p):ngs) ngmap = case Dm.lookup (DB.head ng) ngmap of
                                 Nothing -> frequencyMap ngs (Dm.insert (DB.head ng) [(ng, p)] ngmap)
                                 Just xs -> frequencyMap ngs (Dm.insert (DB.head ng) ((ng, p) : xs) ngmap)
@@ -30,6 +30,9 @@ generateText k n acc cur freqmap = do
 gibberish n = do
         js <- (DB.readFile "./quadgrams.json")
         let (Just ngramPairs) = decode js :: Maybe (Dm.Map DB.ByteString Rational)
-        result <- generateText 4 n "" 32 (frequencyMap (Dm.toList ngramPairs) (Dm.singleton 32 []))
-        print result
-main = gibberish 500
+        result <- generateText 4 n "" 116 (frequencyMap (Dm.toList ngramPairs) (Dm.singleton 0 []))
+        return result
+
+main = do
+        output <- gibberish 1550
+        DB.writeFile "./output3.txt" output
