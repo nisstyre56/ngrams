@@ -1,4 +1,4 @@
-import Data.List.Split
+import Data.List.Utils hiding (join)
 import Data.Char
 import qualified Data.Map as Dm
 import Control.Applicative
@@ -8,6 +8,7 @@ ngrams' n len xs =
   let calcNext next
         | len == n  = return xs
         | otherwise = (toLower <$> next) : (ngrams' n (len - 1) $ drop 1 xs)
+    in calcNext $ take n xs
 
 ngrams n xs = ngrams' n (length xs) xs
 
