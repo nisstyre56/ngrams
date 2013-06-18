@@ -4,10 +4,11 @@ import qualified Data.Map as Dm
 import Control.Applicative
 import Control.Monad
 
-ngrams' n len xs = let next = (take n xs)
-                in case len == n of
-                    False -> (toLower <$> next) : (ngrams' n (len - 1) $ drop 1 xs)
-                    _     -> return xs
+ngrams' n len xs =
+  let calcNext next
+        | len == n  = return xs
+        | otherwise = (toLower <$> next) : (ngrams' n (len - 1) $ drop 1 xs)
+
 ngrams n xs = ngrams' n (length xs) xs
 
 digrams = ngrams 2
@@ -27,8 +28,9 @@ startsP' letter dgs = foldr check (0, 0) dgs where
                                 _    -> (a, n + 1)
     check (first:[]) (a, n) = (a, n + 1)
 
-startsP letter dgs = let (n, k) = startsP' letter (digrams dgs) 
-                        in (fromIntegral n) / (fromIntegral k)
+startsP letter dgs = 
+  let (n, k) = startsP' letter (digrams dgs) 
+    in (fromIntegral n) / (fromIntegral k)
 
 
 select [] = []
@@ -58,10 +60,12 @@ out fname n (d, k) = appendFile fname $ (show d) ++ ":" ++ (show $ k/n) ++ ","
 -- first argument is all possible ngrams in a Map
 -- second argument is all of the tokenized ngrams from the corpus
 ngramProbs k ngrams [] = (k, ngrams)
-ngramProbs k ngrams (n:ns) = case (Dm.lookup n ngrams) of
-                                Nothing -> ngramProbs k ngrams ns
-                                (Just count) -> let ngrams' = Dm.insert n (count+1) ngrams
-                                                    in ngramProbs (k+1) ngrams' ns
+ngramProbs k ngrams (n:ns) = 
+  case (Dm.lookup n ngrams) of
+    Nothing -> ngramProbs k ngrams ns
+    (Just count) -> 
+      let ngrams' = Dm.insert n (count+1) ngrams
+        in ngramProbs (k+1) ngrams' ns
 
 -- buildProbabilities :: (Fractional a, Ord k) => [k] -> Dm.Map k a
 buildProbabilities ngrams = Dm.fromList [(ngram, 0) | ngram <- ngrams]
